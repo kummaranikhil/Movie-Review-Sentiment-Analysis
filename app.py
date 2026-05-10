@@ -3,13 +3,14 @@ import pickle
 import re
 import nltk
 
+# download stopwords
 nltk.download('stopwords')
 
 from nltk.corpus import stopwords
 
 # page configuration
 st.set_page_config(
-    page_title="Movie Sentiment Analyzer",
+    page_title="Movie Review Sentiment Analyzer",
     page_icon="🎬",
     layout="centered"
 )
@@ -29,30 +30,31 @@ with open("tfidf_vectorizer.pkl", "rb") as file:
 # text cleaning function
 def clean_text(text):
 
-    # convert to lowercase
+    # convert text to lowercase
     text = text.lower()
 
-    # remove special characters
+    # remove special characters and numbers
     text = re.sub(r'[^a-zA-Z]', ' ', text)
 
-    # split words
+    # split text into words
     words = text.split()
 
     # remove stopwords
     words = [word for word in words if word not in stop_words]
 
-    # join cleaned words
+    # join words again
     return " ".join(words)
 
 
-# sidebar
+# ---------------- SIDEBAR ---------------- #
+
 st.sidebar.title("📌 Project Information")
 
 st.sidebar.write(
     """
     This AI application analyzes movie reviews 
     and predicts whether the sentiment is 
-    positive or negative using Natural Language Processing.
+    positive or negative using NLP and Machine Learning.
     """
 )
 
@@ -66,6 +68,7 @@ st.sidebar.write(
     - TF-IDF Vectorization
     - Logistic Regression
     - NLP
+    - NLTK
     """
 )
 
@@ -74,17 +77,18 @@ st.sidebar.subheader("👨‍💻 Developed By")
 st.sidebar.write("Nikhil")
 
 
-# custom CSS styling
+# ---------------- CUSTOM CSS ---------------- #
+
 st.markdown(
     """
     <style>
 
-    /* Main background */
+    /* Main App Background */
     .stApp {
         background-color: #0E1117;
     }
 
-    /* Text area styling */
+    /* Text Area */
     textarea {
         border-radius: 10px !important;
         border: 2px solid #FF4B4B !important;
@@ -92,7 +96,7 @@ st.markdown(
         font-size: 16px !important;
     }
 
-    /* Button styling */
+    /* Button Styling */
     div.stButton > button {
         background-color: #FF4B4B;
         color: white;
@@ -104,10 +108,18 @@ st.markdown(
         border: none;
     }
 
-    /* Button hover effect */
+    /* Button Hover Effect */
     div.stButton > button:hover {
         background-color: #ff2e2e;
         color: white;
+    }
+
+    /* Metric Styling */
+    [data-testid="stMetric"] {
+        background-color: #262730;
+        padding: 15px;
+        border-radius: 10px;
+        text-align: center;
     }
 
     </style>
@@ -116,14 +128,16 @@ st.markdown(
 )
 
 
-# banner image
+# ---------------- BANNER IMAGE ---------------- #
+
 st.image(
     "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba",
     use_container_width=True
 )
 
 
-# professional heading
+# ---------------- TITLE ---------------- #
+
 st.markdown(
     """
     <h1 style='text-align: center; color: #FF4B4B;'>
@@ -137,59 +151,78 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-# user input section
+
+# ---------------- USER INPUT ---------------- #
+
 st.subheader("✍️ Enter Your Movie Review")
 
-user_review = st.text_area(
+user_input = st.text_area(
     "",
     placeholder="Type your movie review here...",
     height=180
 )
 
-# prediction button
-if st.button("🔍 Predict Sentiment"):
 
-    # check empty review
-    if user_review.strip() == "":
+# ---------------- PREDICTION ---------------- #
+
+if st.button("🔍 Analyze Sentiment"):
+
+    # empty input validation
+    if user_input.strip() == "":
         st.warning("⚠️ Please enter a movie review.")
 
     else:
 
-        # loading spinner
         with st.spinner("Analyzing Review..."):
 
-            # clean review
-            cleaned_review = clean_text(user_review)
+            # clean text
+            cleaned = clean_text(user_input)
 
-            # convert to vector
-            vector = vectorizer.transform([cleaned_review])
+            # convert text to TF-IDF vectors
+            vector_input = vectorizer.transform([cleaned])
 
-            # prediction
-            prediction = model.predict(vector)[0]
+            # predict sentiment
+            prediction = model.predict(vector_input)[0]
 
-            # prediction probabilities
-            probability = model.predict_proba(vector)
+            # probability/confidence
+            probability = model.predict_proba(vector_input)
 
-            # confidence score
             confidence = round(max(probability[0]) * 100, 2)
 
-            # positive result
+            # positive prediction
             if prediction == 1:
 
-                st.success(
-                    f"😊 Positive Review\n\nConfidence Score: {confidence}%"
+                st.success("😊 Positive Review")
+
+                # progress bar
+                st.progress(int(confidence))
+
+                # confidence score card
+                st.metric(
+                    label="Confidence Score",
+                    value=f"{confidence}%"
                 )
 
+                # celebration animation
                 st.balloons()
 
-            # negative result
+            # negative prediction
             else:
 
-                st.error(
-                    f"😡 Negative Review\n\nConfidence Score: {confidence}%"
+                st.error("😡 Negative Review")
+
+                # progress bar
+                st.progress(int(confidence))
+
+                # confidence score card
+                st.metric(
+                    label="Confidence Score",
+                    value=f"{confidence}%"
                 )
 
-# footer
+
+# ---------------- FOOTER ---------------- #
+
 st.markdown("---")
 
 st.markdown(
