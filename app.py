@@ -155,6 +155,12 @@ st.markdown(
 )
 
 
+# ---------------- SESSION STATE ---------------- #
+
+if 'history' not in st.session_state:
+    st.session_state.history = []
+
+
 # ---------------- USER INPUT ---------------- #
 
 st.subheader("✍️ Enter Your Movie Review")
@@ -195,6 +201,30 @@ if st.button("🔍 Analyze Sentiment"):
             # positive & negative probabilities
             positive_prob = round(probability[0][1] * 100, 2)
             negative_prob = round(probability[0][0] * 100, 2)
+
+            # sentiment label
+            sentiment = "Positive 😊" if prediction == 1 else "Negative 😡"
+
+            # report content
+            report = f"""
+Movie Review Sentiment Analysis Report
+
+Review:
+{user_input}
+
+Predicted Sentiment:
+{sentiment}
+
+Confidence Score:
+{confidence}%
+"""
+
+            # save history
+            st.session_state.history.append({
+                "review": user_input,
+                "sentiment": sentiment,
+                "confidence": confidence
+            })
 
             # ---------------- POSITIVE RESULT ---------------- #
 
@@ -261,6 +291,48 @@ if st.button("🔍 Analyze Sentiment"):
             ax2.axis('equal')
 
             st.pyplot(fig2)
+
+            # ---------------- DOWNLOAD REPORT ---------------- #
+
+            st.download_button(
+                label="📥 Download Analysis Report",
+                data=report,
+                file_name="sentiment_report.txt",
+                mime="text/plain"
+            )
+
+
+# ---------------- REVIEW HISTORY ---------------- #
+
+st.subheader("🕘 Review History")
+
+if len(st.session_state.history) == 0:
+
+    st.info("No reviews analyzed yet.")
+
+else:
+
+    for item in reversed(st.session_state.history):
+
+        st.markdown(
+            f"""
+            <div style="
+                background-color:#262730;
+                padding:15px;
+                border-radius:10px;
+                margin-bottom:10px;
+            ">
+
+            <b>Review:</b> {item['review']} <br><br>
+
+            <b>Sentiment:</b> {item['sentiment']} <br><br>
+
+            <b>Confidence:</b> {item['confidence']}%
+
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
 
 
 # ---------------- FOOTER ---------------- #
