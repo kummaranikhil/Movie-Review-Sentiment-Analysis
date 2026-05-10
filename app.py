@@ -2,6 +2,7 @@ import streamlit as st
 import pickle
 import re
 import nltk
+import matplotlib.pyplot as plt
 
 # download stopwords
 nltk.download('stopwords')
@@ -27,7 +28,8 @@ with open("tfidf_vectorizer.pkl", "rb") as file:
     vectorizer = pickle.load(file)
 
 
-# text cleaning function
+# ---------------- TEXT CLEANING FUNCTION ---------------- #
+
 def clean_text(text):
 
     # convert text to lowercase
@@ -36,7 +38,7 @@ def clean_text(text):
     # remove special characters and numbers
     text = re.sub(r'[^a-zA-Z]', ' ', text)
 
-    # split text into words
+    # split into words
     words = text.split()
 
     # remove stopwords
@@ -69,6 +71,7 @@ st.sidebar.write(
     - Logistic Regression
     - NLP
     - NLTK
+    - Matplotlib
     """
 )
 
@@ -83,12 +86,12 @@ st.markdown(
     """
     <style>
 
-    /* Main App Background */
+    /* Main background */
     .stApp {
         background-color: #0E1117;
     }
 
-    /* Text Area */
+    /* Text area */
     textarea {
         border-radius: 10px !important;
         border: 2px solid #FF4B4B !important;
@@ -96,7 +99,7 @@ st.markdown(
         font-size: 16px !important;
     }
 
-    /* Button Styling */
+    /* Button styling */
     div.stButton > button {
         background-color: #FF4B4B;
         color: white;
@@ -108,13 +111,13 @@ st.markdown(
         border: none;
     }
 
-    /* Button Hover Effect */
+    /* Button hover */
     div.stButton > button:hover {
         background-color: #ff2e2e;
         color: white;
     }
 
-    /* Metric Styling */
+    /* Metric card */
     [data-testid="stMetric"] {
         background-color: #262730;
         padding: 15px;
@@ -167,7 +170,7 @@ user_input = st.text_area(
 
 if st.button("🔍 Analyze Sentiment"):
 
-    # empty input validation
+    # check empty input
     if user_input.strip() == "":
         st.warning("⚠️ Please enter a movie review.")
 
@@ -178,18 +181,23 @@ if st.button("🔍 Analyze Sentiment"):
             # clean text
             cleaned = clean_text(user_input)
 
-            # convert text to TF-IDF vectors
+            # convert into TF-IDF vectors
             vector_input = vectorizer.transform([cleaned])
 
             # predict sentiment
             prediction = model.predict(vector_input)[0]
 
-            # probability/confidence
+            # probability values
             probability = model.predict_proba(vector_input)
 
             confidence = round(max(probability[0]) * 100, 2)
 
-            # positive prediction
+            # positive & negative probabilities
+            positive_prob = round(probability[0][1] * 100, 2)
+            negative_prob = round(probability[0][0] * 100, 2)
+
+            # ---------------- POSITIVE RESULT ---------------- #
+
             if prediction == 1:
 
                 st.success("😊 Positive Review")
@@ -197,16 +205,17 @@ if st.button("🔍 Analyze Sentiment"):
                 # progress bar
                 st.progress(int(confidence))
 
-                # confidence score card
+                # metric card
                 st.metric(
                     label="Confidence Score",
                     value=f"{confidence}%"
                 )
 
-                # celebration animation
+                # balloons animation
                 st.balloons()
 
-            # negative prediction
+            # ---------------- NEGATIVE RESULT ---------------- #
+
             else:
 
                 st.error("😡 Negative Review")
@@ -214,11 +223,27 @@ if st.button("🔍 Analyze Sentiment"):
                 # progress bar
                 st.progress(int(confidence))
 
-                # confidence score card
+                # metric card
                 st.metric(
                     label="Confidence Score",
                     value=f"{confidence}%"
                 )
+
+            # ---------------- CHART ---------------- #
+
+            st.subheader("📊 Sentiment Probability Analysis")
+
+            labels = ['Positive', 'Negative']
+            values = [positive_prob, negative_prob]
+
+            fig, ax = plt.subplots()
+
+            ax.bar(labels, values)
+
+            ax.set_ylabel("Probability (%)")
+            ax.set_title("Sentiment Probability")
+
+            st.pyplot(fig)
 
 
 # ---------------- FOOTER ---------------- #
