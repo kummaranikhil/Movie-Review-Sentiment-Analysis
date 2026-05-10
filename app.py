@@ -229,7 +229,7 @@ if st.button("🔍 Analyze Sentiment"):
                     value=f"{confidence}%"
                 )
 
-            # ---------------- CHART ---------------- #
+            # ---------------- BAR CHART ---------------- #
 
             st.subheader("📊 Sentiment Probability Analysis")
 
@@ -244,6 +244,23 @@ if st.button("🔍 Analyze Sentiment"):
             ax.set_title("Sentiment Probability")
 
             st.pyplot(fig)
+
+            # ---------------- PIE CHART ---------------- #
+
+            st.subheader("🥧 Sentiment Distribution")
+
+            fig2, ax2 = plt.subplots()
+
+            ax2.pie(
+                values,
+                labels=labels,
+                autopct='%1.1f%%',
+                startangle=90
+            )
+
+            ax2.axis('equal')
+
+            st.pyplot(fig2)
 
 
 # ---------------- FOOTER ---------------- #
